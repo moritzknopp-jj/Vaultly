@@ -65,3 +65,48 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Device-limit error card */
+.errorCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 32px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-mid);
+  border-radius: 16px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.errorTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.errorMessage {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.primaryBtnStandalone {
+  padding: 10px 24px;
+  background: var(--accent);
+  color: #0a0a0a;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.primaryBtnStandalone:hover {
+  opacity: 0.88;
+}
