@@ -82,6 +82,9 @@ serve(async (req) => {
 
     // Fetch current BTC price to validate amount
     const priceRes = await fetch('https://www.blockonomics.co/api/price?currency=USD')
+    if (!priceRes.ok) {
+      throw new Error(`Blockonomics price fetch failed: ${priceRes.statusText}`)
+    }
     const priceData = await priceRes.json()
     const btcPriceUSD = priceData.price as number
 

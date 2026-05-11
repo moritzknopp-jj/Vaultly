@@ -1,3 +1,5 @@
+import { supabase } from './supabase'
+
 /** Maximum number of devices allowed per account. */
 const MAX_DEVICES_PER_ACCOUNT = 2
 
@@ -11,7 +13,6 @@ export async function getDeviceId(): Promise<string> {
 }
 
 export async function registerDevice(userId: string): Promise<{ success: boolean; error?: string }> {
-  const { supabase } = await import('./supabase') // dynamic import avoids circular dep with supabase.ts
   const deviceId = await getDeviceId()
 
   const { data, error } = await supabase

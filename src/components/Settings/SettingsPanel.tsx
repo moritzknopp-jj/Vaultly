@@ -48,6 +48,7 @@ export default function SettingsPanel({
   }, [userId])
 
   async function handlePickVault() {
+    if (!window.electronAPI) return
     const path = await window.electronAPI.pickVaultFolder()
     if (path) onVaultPicked(path)
   }
