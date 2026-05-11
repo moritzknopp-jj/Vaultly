@@ -5,12 +5,11 @@
 <h1 align="center">Vaultly</h1>
 
 <p align="center">
-  <strong>Chat with your Obsidian vault using local AI. Private, offline, fast.</strong>
+  <strong>Chat with your Obsidian vault using local AI. Private, offline, yours.</strong>
 </p>
 
 <p align="center">
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" />
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
   <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-gold?style=flat-square&color=d4af37" />
 </p>
 
@@ -18,92 +17,83 @@
 
 ## What is Vaultly?
 
-Vaultly is a desktop app that connects your [Obsidian](https://obsidian.md) vault to a local AI assistant. Ask questions about your notes, get context-aware answers — all without sending your data to the cloud.
+Vaultly is a Windows desktop app that turns your [Obsidian](https://obsidian.md) vault into a private AI second brain. Your notes stay on your machine — the AI runs locally via Ollama, nothing is sent to the cloud.
 
 ## Features
 
-- 🔒 **Fully local** — AI runs on your machine via Ollama, nothing leaves your device
-- 🧠 **Semantic search** — Embeds your notes and finds the most relevant context
-- 💬 **Streaming chat** — Real-time response streaming with llama3
-- 📦 **Obsidian-native** — Reads all your `.md` files recursively
-- ₿ **Bitcoin payments** — $8/month subscription paid via Bitcoin (Blockonomics)
-- 🔑 **2-device limit** — Secure per-device authentication
-- 🆓 **30-day free trial** — No credit card needed
+- **Fully private** — AI runs on your machine via Ollama. Your notes never leave your device.
+- **Semantic search** — Your vault is embedded and searched by meaning, not just keywords.
+- **Streaming chat** — Ask questions, get instant context-aware answers from your own notes.
+- **Note editor** — Browse, edit, and save `.md` files directly inside Vaultly.
+- **Semantic graph** — Visualise which notes are conceptually related to each other.
+- **Daily digest** — On startup, get a summary of what changed in your vault in the last 24 hours.
+- **Linked mentions** — See backlinks and outlinks for any note.
+- **Pin notes** — Pin important notes so their content is always injected into every chat.
+- **Export chat** — Save any conversation as a `.md` file straight into your vault.
+- **2-device limit** — Your account works on up to 2 machines.
+- **7-day free trial** — No card needed.
 
-## How to Install
+## Download
 
-1. Download the latest installer from [Releases](../../releases/latest)
-2. Run `Vaultly-Setup-1.0.0.exe`
-3. Launch Vaultly and create an account
+Get the latest release from the [Releases](../../releases/latest) page.
 
-## Setting Up Ollama
+Run `Vaultly-1.0.0-portable.exe` — no installation required, just double-click and go.
 
-Vaultly requires [Ollama](https://ollama.ai) for local AI.
+## Requirements
 
-1. Download and install Ollama from [ollama.ai](https://ollama.ai)
-2. Open a terminal and run:
+**[Ollama](https://ollama.ai)** must be installed and running. Pull the two required models:
 
 ```bash
 ollama pull llama3
 ollama pull nomic-embed-text
 ```
 
-3. Make sure Ollama is running (it starts automatically after install)
+Ollama starts automatically after install — no manual steps needed after that.
 
-## How It Works
+## Getting Started
 
-1. **Sign up** — 30-day free trial, no card needed
-2. **Select vault** — Open Settings → Select your Obsidian vault folder
-3. **Wait for indexing** — Vaultly embeds all your notes (takes 1–5 min)
-4. **Chat** — Ask anything about your notes
-
-## Screenshot
-
-> _Screenshot coming soon_
+1. Download and run `Vaultly-1.0.0-portable.exe`
+2. Create an account (7-day free trial, no card)
+3. Click **Select Vault** and pick your Obsidian vault folder
+4. Wait for indexing (30 seconds to a few minutes depending on vault size)
+5. Start chatting
 
 ## Subscription
 
-After the 30-day trial, Vaultly costs **$8/month** paid in Bitcoin.
+After the trial, Vaultly is **$8/month** paid in Bitcoin — no accounts, no subscriptions platform, just a one-time BTC transfer per month.
 
 - A unique Bitcoin address is generated for your account
-- Send the exact BTC amount shown in the app
-- Payment is verified automatically, access unlocks instantly
+- Send the exact amount shown in the app
+- Verification is automatic, access unlocks within seconds
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Desktop app | Electron 28 + React 18 + TypeScript |
-| UI build | Vite 5 |
-| Auth + DB | Supabase |
-| Local AI | Ollama (llama3) |
-| Embeddings | nomic-embed-text via Ollama |
+| Layer | Technology |
+|---|---|
+| Desktop shell | Electron 28 |
+| UI | React 18 + TypeScript + Vite 5 |
+| Auth & database | Supabase |
+| Local AI | Ollama |
+| Embeddings | `nomic-embed-text` via Ollama |
 | Vector search | In-memory cosine similarity |
 | Payments | Blockonomics Bitcoin API |
+| API key storage | Windows DPAPI (`safeStorage`) |
 
 ## Building from Source
 
 ```bash
-# Install dependencies
 npm install
-
-# Development
-npm run dev
-
-# Build (requires Electron environment)
-npm run build:win    # Windows installer
-npm run build:linux  # Linux AppImage
+npm run dev          # development (hot reload)
+npm run build:win    # Windows portable .exe → dist-release/
 ```
 
-## Environment Variables
-
-Create a `.env` file in the project root:
+Requires a `.env` file:
 
 ```
-VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 ## License
 
-MIT © 2024 Vaultly
+MIT © 2026 Vaultly
