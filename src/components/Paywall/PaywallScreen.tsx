@@ -4,6 +4,8 @@ import { supabase } from '../../lib/supabase'
 import Logo from '../Logo'
 import styles from './Paywall.module.css'
 
+const FALLBACK_BTC_AMOUNT = '0.000120'
+
 interface Props {
   userId: string
   btcAddress: string | null
@@ -17,7 +19,6 @@ export default function PaywallScreen({ userId, btcAddress, onPaymentConfirmed, 
   const [status, setStatus] = useState<'waiting' | 'confirmed'>('waiting')
   const [address, setAddress] = useState(btcAddress)
   const [copyFeedback, setCopyFeedback] = useState(false)
-  const [pollCount, setPollCount] = useState(0)
 
   useEffect(() => {
     async function fetchPrice() {
@@ -30,7 +31,7 @@ export default function PaywallScreen({ userId, btcAddress, onPaymentConfirmed, 
           setBtcAmount((8 / price).toFixed(6))
         }
       } catch {
-        setBtcAmount('0.000120')
+        setBtcAmount(FALLBACK_BTC_AMOUNT)
       }
     }
     fetchPrice()
@@ -50,8 +51,6 @@ export default function PaywallScreen({ userId, btcAddress, onPaymentConfirmed, 
     if (data?.confirmed) {
       setStatus('confirmed')
       setTimeout(onPaymentConfirmed, 2500)
-    } else {
-      setPollCount(n => n + 1)
     }
   }, [userId, onPaymentConfirmed])
 

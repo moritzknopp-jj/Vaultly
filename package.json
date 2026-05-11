@@ -50,7 +50,7 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "src/assets/logo.ico"
+      "icon": "src/assets/logo.png"
     },
     "nsis": {
       "oneClick": false,
