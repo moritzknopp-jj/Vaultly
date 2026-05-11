@@ -36,6 +36,10 @@ interface VectorEntry {
 }
 
 let vectorStore: VectorEntry[] = []
+let indexedFileList: { path: string; content: string }[] = []
+
+export function getVectorStore(): VectorEntry[] { return vectorStore }
+export function getIndexedFiles(): { path: string; content: string }[] { return indexedFileList }
 
 export function clearVectorStore() {
   vectorStore = []
@@ -46,6 +50,7 @@ export async function indexVault(
   onProgress?: (current: number, total: number) => void
 ): Promise<void> {
   vectorStore = []
+  indexedFileList = files
   const allChunks: Chunk[] = []
 
   for (const file of files) {

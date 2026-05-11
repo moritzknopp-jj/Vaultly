@@ -33,7 +33,7 @@ serve(async (req) => {
 
     const now = new Date()
     const trialEnd = new Date(data.trial_start)
-    trialEnd.setDate(trialEnd.getDate() + 30)
+    trialEnd.setDate(trialEnd.getDate() + 7)
 
     const inTrial = now < trialEnd
     const isPaid = data.is_paid && data.paid_until && new Date(data.paid_until) > now

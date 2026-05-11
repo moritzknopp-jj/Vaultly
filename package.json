@@ -37,13 +37,19 @@
   "build": {
     "appId": "com.vaultly.app",
     "productName": "Vaultly",
-    "copyright": "Copyright © 2024 Vaultly",
+    "copyright": "Copyright © 2026 Vaultly",
     "directories": {
       "output": "dist-release"
     },
     "files": [
       "dist/**/*",
       "dist-electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "src/assets/logo.png",
+        "to": "assets/logo.png"
+      }
     ],
     "icon": "src/assets/logo.png",
     "win": {

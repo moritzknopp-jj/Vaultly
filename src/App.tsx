@@ -10,10 +10,10 @@ import Logo from './components/Logo'
 import type { Session } from '@supabase/supabase-js'
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24
-const TRIAL_DAYS = 30
+const TRIAL_DAYS = 7
 import styles from './App.module.css'
 
-type AppView = 'login' | 'register' | 'chat' | 'paywall'
+type AppView = 'login' | 'register' | 'chat' | 'paywall' | 'device-limit'
 
 interface UserMeta {
   trial_start: string
@@ -27,7 +27,7 @@ export default function App() {
   const [view, setView] = useState<AppView>('login')
   const [userMeta, setUserMeta] = useState<UserMeta | null>(null)
   const [loading, setLoading] = useState(true)
-  const [trialDaysLeft, setTrialDaysLeft] = useState<number>(30)
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number>(7)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -55,10 +55,11 @@ export default function App() {
 
   async function onSessionReady(session: Session) {
     setLoading(true)
-    try {
-      await registerDevice(session.user.id)
-    } catch {
-      // ignore device registration errors silently
+    const deviceResult = await registerDevice(session.user.id)
+    if (!deviceResult.success && deviceResult.errorCode === 'MAX_DEVICES_REACHED') {
+      setView('device-limit')
+      setLoading(false)
+      return
     }
     await checkSubscription(session.user.id)
   }
@@ -73,7 +74,10 @@ export default function App() {
         .single()
 
       if (error || !data) {
-        setView('login')
+        // users_meta row doesn't exist yet (e.g. trigger hasn't run or email not confirmed).
+        // Treat as a fresh trial so the user can access the app, then redirect to paywall if
+        // we can't load their state.
+        setView('paywall')
         setLoading(false)
         return
       }
@@ -132,6 +136,27 @@ export default function App() {
           ) : (
             <Login onSuccess={handleAuthSuccess} onRegisterClick={() => setView('register')} />
           )}
+        </div>
+      </div>
+    )
+  }
+
+  if (view === 'device-limit') {
+    return (
+      <div className={styles.authScreen}>
+        <TitleBar />
+        <div className={styles.authContent}>
+          <div className={styles.errorCard}>
+            <Logo size={36} />
+            <h2 className={styles.errorTitle}>Device limit reached</h2>
+            <p className={styles.errorMessage}>
+              This account is already registered on 2 devices. Sign in on one of your existing
+              devices and remove it from Settings → Devices before using this one.
+            </p>
+            <button className={styles.primaryBtnStandalone} onClick={() => supabase.auth.signOut()}>
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
     )

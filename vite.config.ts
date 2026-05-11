@@ -41,4 +41,12 @@ export default defineConfig(({ command }) => ({
     outDir: 'dist',
     emptyOutDir: true,
   },
+  server: {
+    // Extend the HMR WebSocket timeout so a slow minimize/restore doesn't
+    // trigger a full page reload when the connection briefly drops.
+    hmr: {
+      timeout: 120000,
+      overlay: false,
+    },
+  },
 }))

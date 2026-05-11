@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { getDeviceId } from '../../lib/deviceId'
+import { getAvailableModels, getSelectedModel, setSelectedModel } from '../../lib/ollama'
+import { KNOWN_SERVICES, hasApiKey, setApiKey, removeApiKey, listStoredServices, getApiKey } from '../../lib/apiKeys'
 import styles from './Settings.module.css'
 
 interface Props {
@@ -27,10 +29,24 @@ export default function SettingsPanel({
   const [currentDeviceId, setCurrentDeviceId] = useState<string>('')
   const [removingDevice, setRemovingDevice] = useState<string | null>(null)
   const [loadingDevices, setLoadingDevices] = useState(true)
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'none' | 'error'>('idle')
+  const [updateVersion, setUpdateVersion] = useState<string | null>(null)
+  const [availableModels, setAvailableModels] = useState<string[]>([getSelectedModel()])
+  const [selectedModel, setSelectedModelState] = useState(getSelectedModel())
+
+  // API keys
+  const [savedServices, setSavedServices] = useState<string[]>(() => listStoredServices())
+  const [keyInputs, setKeyInputs] = useState<Record<string, string>>({})
+  const [keyVisible, setKeyVisible] = useState<Record<string, boolean>>({})
+  const [savingKey, setSavingKey] = useState<string | null>(null)
+  const [customServiceId, setCustomServiceId] = useState('')
+  const [showCustomInput, setShowCustomInput] = useState(false)
+  const [activeService, setActiveService] = useState<string | null>(null)
+
+  useEffect(() => { getAvailableModels().then(setAvailableModels) }, [])
 
   useEffect(() => {
-    async function loadDevices() {
-      setLoadingDevices(true)
+    async function loadDevices() {      setLoadingDevices(true)
       const deviceId = await getDeviceId()
       setCurrentDeviceId(deviceId)
 
@@ -63,6 +79,54 @@ export default function SettingsPanel({
 
   function shortDeviceId(id: string) {
     return id.slice(0, 8) + '…' + id.slice(-6)
+  }
+
+  async function handleCheckUpdate() {
+    setUpdateStatus('checking')
+    const result = await window.electronAPI.checkForUpdates()
+    if (result.hasUpdate) {
+      setUpdateStatus('available')
+      setUpdateVersion(result.version ?? null)
+    } else if (result.error) {
+      setUpdateStatus('error')
+    } else {
+      setUpdateStatus('none')
+    }
+  }
+
+  async function handleInstallUpdate() {
+    await window.electronAPI.downloadAndInstallUpdate()
+  }
+
+  async function handleSaveKey(serviceId: string) {
+    const val = keyInputs[serviceId] ?? ''
+    setSavingKey(serviceId)
+    await setApiKey(serviceId, val)
+    setSavedServices(listStoredServices())
+    setKeyInputs(prev => ({ ...prev, [serviceId]: '' }))
+    setActiveService(null)
+    setSavingKey(null)
+  }
+
+  async function handleLoadKey(serviceId: string) {
+    const val = await getApiKey(serviceId)
+    setKeyInputs(prev => ({ ...prev, [serviceId]: val }))
+    setActiveService(serviceId)
+  }
+
+  function handleDeleteKey(serviceId: string) {
+    removeApiKey(serviceId)
+    setSavedServices(listStoredServices())
+    setKeyInputs(prev => { const n = { ...prev }; delete n[serviceId]; return n })
+    setActiveService(null)
+  }
+
+  function handleAddCustom() {
+    const id = customServiceId.trim().toLowerCase().replace(/\s+/g, '-')
+    if (!id) return
+    setCustomServiceId('')
+    setShowCustomInput(false)
+    setActiveService(id)
   }
 
   return (
@@ -104,6 +168,20 @@ export default function SettingsPanel({
               </div>
             )}
           </div>
+        </section>
+
+        {/* AI Model */}
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>AI Model</h3>
+          <select
+            className={styles.primaryBtn}
+            value={selectedModel}
+            onChange={e => { setSelectedModelState(e.target.value); setSelectedModel(e.target.value) }}
+            style={{ fontFamily: 'inherit', cursor: 'pointer' }}
+          >
+            {availableModels.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <p className={styles.hint}>Only models installed in Ollama are shown. Embedding always uses <code>nomic-embed-text</code>.</p>
         </section>
 
         {/* Vault */}
@@ -180,6 +258,168 @@ export default function SettingsPanel({
           <h3 className={styles.sectionTitle}>Account</h3>
           <p className={styles.accountEmail}>{userEmail}</p>
           <button className={styles.signOutBtn} onClick={onSignOut}>Sign out</button>
+        </section>
+
+        {/* API Keys */}
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>API Keys</h3>
+          <p className={styles.hint}>Keys are encrypted with OS-level security (Windows DPAPI) and never sent to any server.</p>
+
+          <div className={styles.apiKeyList}>
+            {/* Well-known services (excluding the meta "custom" entry) */}
+            {KNOWN_SERVICES.filter(s => s.id !== 'custom').map(svc => {
+              const isSaved = savedServices.includes(svc.id)
+              const isEditing = activeService === svc.id
+              return (
+                <div key={svc.id} className={styles.apiKeyRow}>
+                  <div className={styles.apiKeyHeader}>
+                    <span className={styles.apiKeyLabel}>
+                      {svc.label}
+                      {isSaved && <span className={styles.apiKeyBadge}>saved</span>}
+                    </span>
+                    <div className={styles.apiKeyActions}>
+                      {svc.docsUrl && (
+                        <a href={svc.docsUrl} target="_blank" rel="noreferrer" className={styles.apiKeyLink}>get key</a>
+                      )}
+                      {isSaved && !isEditing && (
+                        <>
+                          <button className={styles.apiKeyEditBtn} onClick={() => handleLoadKey(svc.id)}>edit</button>
+                          <button className={styles.apiKeyDeleteBtn} onClick={() => handleDeleteKey(svc.id)}>remove</button>
+                        </>
+                      )}
+                      {!isSaved && !isEditing && (
+                        <button className={styles.apiKeyEditBtn} onClick={() => setActiveService(svc.id)}>add</button>
+                      )}
+                    </div>
+                  </div>
+
+                  {isEditing && (
+                    <div className={styles.apiKeyInputRow}>
+                      <div className={styles.apiKeyInputWrapper}>
+                        <input
+                          type={keyVisible[svc.id] ? 'text' : 'password'}
+                          className={styles.apiKeyInput}
+                          placeholder={svc.placeholder || 'Paste your API key'}
+                          value={keyInputs[svc.id] ?? ''}
+                          onChange={e => setKeyInputs(prev => ({ ...prev, [svc.id]: e.target.value }))}
+                          autoFocus
+                        />
+                        <button
+                          className={styles.apiKeyVisBtn}
+                          onClick={() => setKeyVisible(prev => ({ ...prev, [svc.id]: !prev[svc.id] }))}
+                          title={keyVisible[svc.id] ? 'Hide' : 'Show'}
+                        >
+                          {keyVisible[svc.id] ? '🙈' : '👁'}
+                        </button>
+                      </div>
+                      <button
+                        className={styles.primaryBtn}
+                        style={{ padding: '6px 14px' }}
+                        onClick={() => handleSaveKey(svc.id)}
+                        disabled={savingKey === svc.id || !keyInputs[svc.id]?.trim()}
+                      >
+                        {savingKey === svc.id ? '…' : 'Save'}
+                      </button>
+                      <button className={styles.apiKeyDeleteBtn} onClick={() => setActiveService(null)}>cancel</button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+
+            {/* Custom services already saved */}
+            {savedServices
+              .filter(id => !KNOWN_SERVICES.some(s => s.id === id))
+              .map(id => {
+                const isEditing = activeService === id
+                return (
+                  <div key={id} className={styles.apiKeyRow}>
+                    <div className={styles.apiKeyHeader}>
+                      <span className={styles.apiKeyLabel}>
+                        {id} <span className={styles.apiKeyBadge}>saved</span>
+                      </span>
+                      <div className={styles.apiKeyActions}>
+                        {!isEditing && (
+                          <>
+                            <button className={styles.apiKeyEditBtn} onClick={() => handleLoadKey(id)}>edit</button>
+                            <button className={styles.apiKeyDeleteBtn} onClick={() => handleDeleteKey(id)}>remove</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {isEditing && (
+                      <div className={styles.apiKeyInputRow}>
+                        <div className={styles.apiKeyInputWrapper}>
+                          <input
+                            type={keyVisible[id] ? 'text' : 'password'}
+                            className={styles.apiKeyInput}
+                            placeholder="Paste your API key"
+                            value={keyInputs[id] ?? ''}
+                            onChange={e => setKeyInputs(prev => ({ ...prev, [id]: e.target.value }))}
+                            autoFocus
+                          />
+                          <button
+                            className={styles.apiKeyVisBtn}
+                            onClick={() => setKeyVisible(prev => ({ ...prev, [id]: !prev[id] }))}
+                          >
+                            {keyVisible[id] ? '🙈' : '👁'}
+                          </button>
+                        </div>
+                        <button
+                          className={styles.primaryBtn}
+                          style={{ padding: '6px 14px' }}
+                          onClick={() => handleSaveKey(id)}
+                          disabled={savingKey === id || !keyInputs[id]?.trim()}
+                        >
+                          {savingKey === id ? '…' : 'Save'}
+                        </button>
+                        <button className={styles.apiKeyDeleteBtn} onClick={() => setActiveService(null)}>cancel</button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+          </div>
+
+          {/* Add custom service */}
+          {showCustomInput ? (
+            <div className={styles.apiKeyInputRow} style={{ marginTop: 8 }}>
+              <input
+                type="text"
+                className={styles.apiKeyInput}
+                placeholder="Service name (e.g. replicate)"
+                value={customServiceId}
+                onChange={e => setCustomServiceId(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddCustom()}
+                autoFocus
+              />
+              <button className={styles.primaryBtn} style={{ padding: '6px 14px' }} onClick={handleAddCustom}>Add</button>
+              <button className={styles.apiKeyDeleteBtn} onClick={() => { setShowCustomInput(false); setCustomServiceId('') }}>cancel</button>
+            </div>
+          ) : (
+            <button className={styles.apiKeyEditBtn} style={{ marginTop: 8 }} onClick={() => setShowCustomInput(true)}>
+              + Add custom service
+            </button>
+          )}
+        </section>
+
+        {/* Updates */}
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Updates</h3>
+          {updateStatus === 'available' ? (
+            <>
+              <p className={styles.hint}>Update {updateVersion} is available.</p>
+              <button className={styles.primaryBtn} onClick={handleInstallUpdate}>Download &amp; install</button>
+            </>
+          ) : (
+            <button
+              className={styles.primaryBtn}
+              onClick={handleCheckUpdate}
+              disabled={updateStatus === 'checking'}
+            >
+              {updateStatus === 'checking' ? 'Checking…' : updateStatus === 'none' ? 'Up to date ✓' : updateStatus === 'error' ? 'Check failed — retry' : 'Check for updates'}
+            </button>
+          )}
         </section>
       </div>
     </div>

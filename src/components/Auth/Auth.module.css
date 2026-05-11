@@ -186,3 +186,27 @@
 }
 
 .confirmText strong { color: var(--accent); font-weight: 500; }
+
+.forgotBtn {
+  display: block;
+  margin: -8px 0 8px auto;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 0;
+  transition: color var(--transition);
+}
+
+.forgotBtn:hover:not(:disabled) { color: var(--accent); }
+.forgotBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.successBox {
+  background: rgba(80, 200, 120, 0.08);
+  border: 1px solid rgba(80, 200, 120, 0.25);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #6fcf97;
+}

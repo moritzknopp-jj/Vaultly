@@ -284,3 +284,132 @@
   color: #f87171;
   background: rgba(239, 68, 68, 0.05);
 }
+
+/* ── API Keys ── */
+.apiKeyList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.apiKeyRow {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.apiKeyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  transition: background var(--transition);
+}
+
+.apiKeyHeader:hover {
+  background: var(--bg-hover);
+}
+
+.apiKeyLabel {
+  font-size: 13px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apiKeyBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.apiKeyActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apiKeyLink {
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity var(--transition);
+}
+.apiKeyLink:hover { opacity: 1; }
+
+.apiKeyEditBtn {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+.apiKeyEditBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+.apiKeyDeleteBtn {
+  font-size: 11px;
+  color: #f87171;
+  background: none;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+.apiKeyDeleteBtn:hover { background: rgba(248, 113, 113, 0.08); border-color: #f87171; }
+
+.apiKeyInputRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 10px;
+}
+
+.apiKeyInputWrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.apiKeyInput {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  padding: 7px 36px 7px 10px;
+  outline: none;
+  transition: border-color var(--transition);
+  width: 100%;
+}
+.apiKeyInput:focus { border-color: var(--accent); }
+.apiKeyInput::placeholder { color: var(--text-muted); font-family: inherit; font-size: 12px; }
+
+.apiKeyVisBtn {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0.6;
+  padding: 0;
+  line-height: 1;
+}
+.apiKeyVisBtn:hover { opacity: 1; }
+

@@ -1,5 +1,24 @@
 const OLLAMA_BASE = 'http://localhost:11434'
 
+const MODEL_KEY = 'vaultly-ollama-model'
+export function getSelectedModel(): string {
+  return localStorage.getItem(MODEL_KEY) ?? 'llama3'
+}
+export function setSelectedModel(model: string): void {
+  localStorage.setItem(MODEL_KEY, model)
+}
+
+export async function getAvailableModels(): Promise<string[]> {
+  try {
+    const res = await fetch(`${OLLAMA_BASE}/api/tags`, { signal: AbortSignal.timeout(3000) })
+    if (!res.ok) return [getSelectedModel()]
+    const data = await res.json()
+    return (data.models as { name: string }[])?.map(m => m.name) ?? [getSelectedModel()]
+  } catch {
+    return [getSelectedModel()]
+  }
+}
+
 export async function checkOllamaRunning(): Promise<boolean> {
   try {
     const res = await fetch(`${OLLAMA_BASE}/api/tags`, { signal: AbortSignal.timeout(3000) })
@@ -32,14 +51,14 @@ export async function* streamChat(
 ): AsyncGenerator<string> {
   const systemMessage: ChatMessage = {
     role: 'system',
-    content: `You are a helpful assistant. Answer questions based only on the provided notes context. If the answer is not in the notes, say so.\n\nContext from notes:\n${context}`,
+    content: `You are a helpful assistant and second brain. You have access to the user's Obsidian vault notes and memory of past conversations. Use both to answer accurately. If the answer is not available in either, say so honestly.\n\nContext:\n${context}`,
   }
 
   const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama3',
+      model: getSelectedModel(),
       messages: [systemMessage, ...messages],
       stream: true,
     }),

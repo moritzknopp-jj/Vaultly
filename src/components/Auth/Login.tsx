@@ -14,6 +14,8 @@ export default function Login({ onSuccess, onRegisterClick }: Props) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -33,6 +35,22 @@ export default function Login({ onSuccess, onRegisterClick }: Props) {
     } else {
       setError('No session returned. Please try again.')
       setLoading(false)
+    }
+  }
+
+  async function handleForgotPassword() {
+    if (!email) {
+      setError('Enter your email address above, then click "Forgot password".')
+      return
+    }
+    setResetLoading(true)
+    setError('')
+    const { error } = await supabase.auth.resetPasswordForEmail(email)
+    setResetLoading(false)
+    if (error) {
+      setError(error.message)
+    } else {
+      setResetSent(true)
     }
   }
 
@@ -78,6 +96,12 @@ export default function Login({ onSuccess, onRegisterClick }: Props) {
           </div>
         )}
 
+        {resetSent && (
+          <div className={styles.successBox}>
+            Password reset email sent — check your inbox.
+          </div>
+        )}
+
         <button type="submit" className={styles.primaryBtn} disabled={loading}>
           {loading ? (
             <span className={styles.btnContent}>
@@ -88,12 +112,21 @@ export default function Login({ onSuccess, onRegisterClick }: Props) {
         </button>
       </form>
 
+      <button
+        className={styles.forgotBtn}
+        onClick={handleForgotPassword}
+        disabled={resetLoading}
+        type="button"
+      >
+        {resetLoading ? 'Sending…' : 'Forgot password?'}
+      </button>
+
       <div className={styles.divider}>
         <span>New to Vaultly?</span>
       </div>
 
       <button className={styles.secondaryBtn} onClick={onRegisterClick}>
-        Create account — 30 days free
+        Create account — 7 days free
       </button>
     </div>
   )

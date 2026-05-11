@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/assets/logo.svg" width="80" height="80" alt="Vaultly Logo" />
+  <img src="src/assets/logo.png" width="80" height="80" alt="Vaultly Logo" />
 </p>
 
 <h1 align="center">Vaultly</h1>
