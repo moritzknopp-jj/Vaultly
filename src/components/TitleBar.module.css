@@ -1,0 +1,102 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  background: #090909;
+  border-bottom: 1px solid #1a1a1a;
+  padding: 0 8px 0 14px;
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d4af37;
+  letter-spacing: 0.02em;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+}
+
+.btn {
+  width: 36px;
+  height: 30px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.closeBtn:hover {
+  background: rgba(196, 43, 28, 0.8);
+}
+
+.minimizeIcon {
+  display: block;
+  width: 12px;
+  height: 1.5px;
+  background: #888;
+  border-radius: 1px;
+}
+
+.maximizeIcon {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid #888;
+  border-radius: 1px;
+}
+
+.closeIcon {
+  display: block;
+  width: 11px;
+  height: 11px;
+  position: relative;
+}
+
+.closeIcon::before,
+.closeIcon::after {
+  content: '';
+  position: absolute;
+  width: 11px;
+  height: 1.5px;
+  background: #888;
+  top: 50%;
+  left: 0;
+  border-radius: 1px;
+}
+
+.closeIcon::before { transform: rotate(45deg); }
+.closeIcon::after { transform: rotate(-45deg); }
+
+.closeBtn:hover .closeIcon::before,
+.closeBtn:hover .closeIcon::after {
+  background: #fff;
+}
+
+.btn:hover .minimizeIcon,
+.btn:hover .maximizeIcon {
+  background: #ccc;
+  border-color: #ccc;
+}
