@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import { registerDevice } from './lib/deviceId'
 import Login from './components/Auth/Login'
 import Register from './components/Auth/Register'
 import ChatWindow from './components/Chat/ChatWindow'
 import PaywallScreen from './components/Paywall/PaywallScreen'
+import TitleBar from './components/TitleBar'
+import Logo from './components/Logo'
 import type { Session } from '@supabase/supabase-js'
+import styles from './App.module.css'
 
 type AppView = 'login' | 'register' | 'chat' | 'paywall'
 
@@ -20,12 +24,13 @@ export default function App() {
   const [view, setView] = useState<AppView>('login')
   const [userMeta, setUserMeta] = useState<UserMeta | null>(null)
   const [loading, setLoading] = useState(true)
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number>(30)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       if (session) {
-        checkSubscription(session.user.id)
+        onSessionReady(session)
       } else {
         setLoading(false)
       }
@@ -34,7 +39,7 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       if (session) {
-        checkSubscription(session.user.id)
+        onSessionReady(session)
       } else {
         setView('login')
         setUserMeta(null)
@@ -44,6 +49,16 @@ export default function App() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  async function onSessionReady(session: Session) {
+    setLoading(true)
+    try {
+      await registerDevice(session.user.id)
+    } catch {
+      // ignore device registration errors silently
+    }
+    await checkSubscription(session.user.id)
+  }
 
   async function checkSubscription(userId: string) {
     setLoading(true)
@@ -62,9 +77,11 @@ export default function App() {
 
       setUserMeta(data)
 
+      const now = new Date()
       const trialEnd = new Date(data.trial_start)
       trialEnd.setDate(trialEnd.getDate() + 30)
-      const now = new Date()
+      const daysLeft = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      setTrialDaysLeft(daysLeft)
 
       if (data.is_paid && data.paid_until && new Date(data.paid_until) > now) {
         setView('chat')
@@ -82,7 +99,7 @@ export default function App() {
 
   function handleAuthSuccess(session: Session) {
     setSession(session)
-    checkSubscription(session.user.id)
+    onSessionReady(session)
   }
 
   function handlePaymentConfirmed() {
@@ -91,33 +108,54 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: '#0a0a0a', color: '#d4af37',
-        fontSize: '14px', letterSpacing: '0.05em'
-      }}>
-        Loading Vaultly...
+      <div className={styles.loadingScreen}>
+        <TitleBar />
+        <div className={styles.loadingContent}>
+          <Logo size={48} />
+          <p className={styles.loadingText}>Vaultly</p>
+          <div className={styles.loadingSpinner} />
+        </div>
       </div>
     )
   }
 
   if (!session) {
-    if (view === 'register') {
-      return <Register onSuccess={handleAuthSuccess} onLoginClick={() => setView('login')} />
-    }
-    return <Login onSuccess={handleAuthSuccess} onRegisterClick={() => setView('register')} />
+    return (
+      <div className={styles.authScreen}>
+        <TitleBar />
+        <div className={styles.authContent}>
+          {view === 'register' ? (
+            <Register onSuccess={handleAuthSuccess} onLoginClick={() => setView('login')} />
+          ) : (
+            <Login onSuccess={handleAuthSuccess} onRegisterClick={() => setView('register')} />
+          )}
+        </div>
+      </div>
+    )
   }
 
   if (view === 'paywall') {
     return (
-      <PaywallScreen
-        userId={session.user.id}
-        btcAddress={userMeta?.btc_address ?? null}
-        onPaymentConfirmed={handlePaymentConfirmed}
-        onSignOut={() => supabase.auth.signOut()}
-      />
+      <div className={styles.fullScreen}>
+        <TitleBar />
+        <PaywallScreen
+          userId={session.user.id}
+          btcAddress={userMeta?.btc_address ?? null}
+          onPaymentConfirmed={handlePaymentConfirmed}
+          onSignOut={() => supabase.auth.signOut()}
+        />
+      </div>
     )
   }
 
-  return <ChatWindow session={session} onSignOut={() => supabase.auth.signOut()} />
+  return (
+    <div className={styles.fullScreen}>
+      <ChatWindow
+        session={session}
+        trialDaysLeft={trialDaysLeft}
+        isPaid={userMeta?.is_paid ?? false}
+        onSignOut={() => supabase.auth.signOut()}
+      />
+    </div>
+  )
 }

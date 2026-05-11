@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import Logo from '../Logo'
 import type { Session } from '@supabase/supabase-js'
 import styles from './Auth.module.css'
 
@@ -23,57 +24,77 @@ export default function Login({ onSuccess, onRegisterClick }: Props) {
 
     if (error) {
       setError(error.message)
-    } else if (data.session) {
-      onSuccess(data.session)
+      setLoading(false)
+      return
     }
-    setLoading(false)
+
+    if (data.session) {
+      onSuccess(data.session)
+    } else {
+      setError('No session returned. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
-        <div className={styles.logo}>
-          <span className={styles.logoIcon}>🔐</span>
-          <h1 className={styles.logoText}>Vaultly</h1>
-        </div>
-        <p className={styles.subtitle}>Chat with your Obsidian vault</p>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.field}>
-            <label className={styles.label}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className={styles.input}
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-          <div className={styles.field}>
-            <label className={styles.label}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className={styles.input}
-              placeholder="••••••••"
-              required
-            />
-          </div>
-          {error && <p className={styles.error}>{error}</p>}
-          <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <p className={styles.switchText}>
-          Don't have an account?{' '}
-          <button className={styles.link} onClick={onRegisterClick}>
-            Create one
-          </button>
-        </p>
+    <div className={styles.card}>
+      <div className={styles.logoRow}>
+        <Logo size={36} />
+        <h1 className={styles.appName}>Vaultly</h1>
       </div>
+      <p className={styles.tagline}>Chat with your Obsidian vault using local AI</p>
+
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.field}>
+          <label className={styles.label}>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className={styles.input}
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className={styles.input}
+            placeholder="••••••••"
+            autoComplete="current-password"
+            required
+          />
+        </div>
+
+        {error && (
+          <div className={styles.errorBox}>
+            <span className={styles.errorIcon}>⚠</span>
+            {error}
+          </div>
+        )}
+
+        <button type="submit" className={styles.primaryBtn} disabled={loading}>
+          {loading ? (
+            <span className={styles.btnContent}>
+              <span className={styles.btnSpinner} />
+              Signing in...
+            </span>
+          ) : 'Sign In'}
+        </button>
+      </form>
+
+      <div className={styles.divider}>
+        <span>New to Vaultly?</span>
+      </div>
+
+      <button className={styles.secondaryBtn} onClick={onRegisterClick}>
+        Create account — 30 days free
+      </button>
     </div>
   )
 }

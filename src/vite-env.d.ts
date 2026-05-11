@@ -10,6 +10,10 @@ interface ElectronAPI {
   close: () => void
 }
 
-interface Window {
-  electronAPI: ElectronAPI
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI
+  }
 }
+
+export {}

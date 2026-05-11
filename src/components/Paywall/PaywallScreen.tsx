@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../../lib/supabase'
+import Logo from '../Logo'
 import styles from './Paywall.module.css'
 
 interface Props {
@@ -12,8 +13,11 @@ interface Props {
 
 export default function PaywallScreen({ userId, btcAddress, onPaymentConfirmed, onSignOut }: Props) {
   const [btcAmount, setBtcAmount] = useState<string | null>(null)
-  const [status, setStatus] = useState<'waiting' | 'confirmed' | 'error'>('waiting')
+  const [btcPrice, setBtcPrice] = useState<number | null>(null)
+  const [status, setStatus] = useState<'waiting' | 'confirmed'>('waiting')
   const [address, setAddress] = useState(btcAddress)
+  const [copyFeedback, setCopyFeedback] = useState(false)
+  const [pollCount, setPollCount] = useState(0)
 
   useEffect(() => {
     async function fetchPrice() {
@@ -21,101 +25,131 @@ export default function PaywallScreen({ userId, btcAddress, onPaymentConfirmed, 
         const res = await fetch('https://www.blockonomics.co/api/price?currency=USD')
         if (res.ok) {
           const data = await res.json()
-          const priceUSD = data.price as number
-          const btc = (8 / priceUSD).toFixed(6)
-          setBtcAmount(btc)
+          const price = data.price as number
+          setBtcPrice(price)
+          setBtcAmount((8 / price).toFixed(6))
         }
       } catch {
-        setBtcAmount('0.000120') // fallback
+        setBtcAmount('0.000120')
       }
     }
     fetchPrice()
   }, [])
 
   useEffect(() => {
-    if (!address) {
-      supabase.functions.invoke('generate-btc-address', { body: { user_id: userId } })
-        .then(({ data }) => {
-          if (data?.btc_address) setAddress(data.btc_address)
-        })
-    }
+    if (address) return
+    supabase.functions.invoke('generate-btc-address', { body: { user_id: userId } })
+      .then(({ data }) => {
+        if (data?.btc_address) setAddress(data.btc_address)
+      })
+      .catch(console.warn)
   }, [address, userId])
 
-  useEffect(() => {
-    const poll = async () => {
-      const { data } = await supabase.functions.invoke('verify-payment', {
-        body: { user_id: userId },
-      })
-      if (data?.confirmed) {
-        setStatus('confirmed')
-        setTimeout(onPaymentConfirmed, 2000)
-      }
+  const checkPayment = useCallback(async () => {
+    const { data } = await supabase.functions.invoke('verify-payment', { body: { user_id: userId } })
+    if (data?.confirmed) {
+      setStatus('confirmed')
+      setTimeout(onPaymentConfirmed, 2500)
+    } else {
+      setPollCount(n => n + 1)
     }
-
-    poll()
-    const interval = setInterval(poll, 30000)
-    return () => clearInterval(interval)
   }, [userId, onPaymentConfirmed])
 
-  const paymentUri = address && btcAmount
-    ? `bitcoin:${address}?amount=${btcAmount}`
-    : address ?? ''
+  useEffect(() => {
+    checkPayment()
+    const interval = setInterval(checkPayment, 30000)
+    return () => clearInterval(interval)
+  }, [checkPayment])
+
+  async function copyAddress() {
+    if (!address) return
+    try {
+      await navigator.clipboard.writeText(address)
+      setCopyFeedback(true)
+      setTimeout(() => setCopyFeedback(false), 2000)
+    } catch { /* ignore */ }
+  }
+
+  const paymentUri = address && btcAmount ? `bitcoin:${address}?amount=${btcAmount}` : address ?? ''
 
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <div className={styles.header}>
-          <span className={styles.icon}>🔐</span>
-          <h1 className={styles.title}>Vaultly</h1>
+        <div className={styles.logoRow}>
+          <Logo size={32} />
+          <h1 className={styles.appName}>Vaultly</h1>
         </div>
-        <h2 className={styles.heading}>Your free trial has ended</h2>
-        <p className={styles.subtitle}>
-          Continue using Vaultly for <strong className={styles.price}>$8/month</strong> paid in Bitcoin
-        </p>
 
         {status === 'confirmed' ? (
-          <div className={styles.success}>
-            <span className={styles.successIcon}>✅</span>
-            <p>Payment confirmed! Unlocking your vault...</p>
+          <div className={styles.successState}>
+            <div className={styles.successIconWrap}>✅</div>
+            <h2 className={styles.successTitle}>Payment received!</h2>
+            <p className={styles.successSubtitle}>Unlocking your vault access…</p>
+            <div className={styles.successSpinner} />
           </div>
         ) : (
           <>
+            <div className={styles.headingBlock}>
+              <h2 className={styles.heading}>Your trial has ended</h2>
+              <p className={styles.subheading}>
+                Continue with full access for <span className={styles.price}>$8 / month</span>,
+                paid privately in Bitcoin.
+              </p>
+            </div>
+
             {address ? (
-              <div className={styles.qrSection}>
-                <div className={styles.qrWrapper}>
+              <div className={styles.paymentBlock}>
+                <div className={styles.qrContainer}>
                   <QRCodeSVG
                     value={paymentUri}
-                    size={200}
-                    bgColor="#141414"
+                    size={188}
+                    bgColor="#111111"
                     fgColor="#d4af37"
                     level="M"
+                    includeMargin
                   />
                 </div>
-                <div className={styles.addressBox}>
-                  <p className={styles.addressLabel}>Bitcoin Address</p>
-                  <p className={styles.address}>{address}</p>
-                </div>
+
                 {btcAmount && (
-                  <div className={styles.amountBox}>
-                    <p className={styles.amountLabel}>Amount</p>
-                    <p className={styles.amount}>{btcAmount} BTC</p>
-                    <p className={styles.amountUsd}>≈ $8.00 USD</p>
+                  <div className={styles.amountRow}>
+                    <div className={styles.amountBig}>
+                      <span className={styles.amountBtc}>{btcAmount}</span>
+                      <span className={styles.amountUnit}>BTC</span>
+                    </div>
+                    {btcPrice && (
+                      <p className={styles.amountUsd}>
+                        ≈ $8.00 USD · 1 BTC = ${btcPrice.toLocaleString()}
+                      </p>
+                    )}
                   </div>
                 )}
-                <div className={styles.polling}>
-                  <div className={styles.dot} />
-                  <p>Waiting for payment...</p>
+
+                <div className={styles.addressBlock}>
+                  <div className={styles.addressHeader}>
+                    <span className={styles.addressLabel}>Bitcoin address</span>
+                    <button className={styles.copyBtn} onClick={copyAddress}>
+                      {copyFeedback ? '✓ Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  <p className={styles.addressText}>{address}</p>
                 </div>
+
+                <div className={styles.statusRow}>
+                  <div className={styles.pulsingDot} />
+                  <span className={styles.statusText}>Waiting for payment confirmation…</span>
+                </div>
+                <p className={styles.pollHint}>Checking automatically every 30 seconds</p>
               </div>
             ) : (
-              <div className={styles.loading}>Generating payment address...</div>
+              <div className={styles.generating}>
+                <div className={styles.generatingSpinner} />
+                <p>Generating your Bitcoin address…</p>
+              </div>
             )}
           </>
         )}
 
-        <button className={styles.signOut} onClick={onSignOut}>
-          Sign out
-        </button>
+        <button className={styles.signOutLink} onClick={onSignOut}>Sign out</button>
       </div>
     </div>
   )

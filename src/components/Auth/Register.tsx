@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { registerDevice } from '../../lib/deviceId'
+import Logo from '../Logo'
 import type { Session } from '@supabase/supabase-js'
 import styles from './Auth.module.css'
 
@@ -14,6 +15,7 @@ export default function Register({ onSuccess, onLoginClick }: Props) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState<'form' | 'confirm-email'>('form')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -28,97 +30,124 @@ export default function Register({ onSuccess, onLoginClick }: Props) {
       return
     }
 
-    if (!data.session || !data.user) {
-      setError('Check your email to confirm your account.')
+    if (!data.user) {
+      setError('Registration failed. Please try again.')
       setLoading(false)
       return
     }
 
-    // Create users_meta row
-    const { error: metaError } = await supabase.from('users_meta').insert({
+    await supabase.from('users_meta').upsert({
       id: data.user.id,
       trial_start: new Date().toISOString(),
       is_paid: false,
       paid_until: null,
       device_ids: [],
       btc_address: null,
-    })
+    }, { onConflict: 'id', ignoreDuplicates: true })
 
-    if (metaError) {
-      console.error('Failed to create user meta:', metaError)
-    }
-
-    // Register device
-    const deviceResult = await registerDevice(data.user.id)
-    if (!deviceResult.success) {
-      setError(deviceResult.error ?? 'Device registration failed')
+    if (!data.session) {
+      setStep('confirm-email')
       setLoading(false)
       return
     }
 
-    // Generate BTC address via edge function
-    try {
-      await supabase.functions.invoke('generate-btc-address', {
-        body: { user_id: data.user.id },
-      })
-    } catch (err) {
-      console.warn('Failed to generate BTC address:', err)
+    const deviceResult = await registerDevice(data.user.id)
+    if (!deviceResult.success && deviceResult.error) {
+      setError(deviceResult.error)
+      setLoading(false)
+      return
     }
+
+    supabase.functions.invoke('generate-btc-address', {
+      body: { user_id: data.user.id },
+    }).catch(console.warn)
 
     onSuccess(data.session)
     setLoading(false)
   }
 
-  return (
-    <div className={styles.container}>
+  if (step === 'confirm-email') {
+    return (
       <div className={styles.card}>
-        <div className={styles.logo}>
-          <span className={styles.logoIcon}>🔐</span>
-          <h1 className={styles.logoText}>Vaultly</h1>
+        <div className={styles.logoRow}>
+          <Logo size={36} />
+          <h1 className={styles.appName}>Vaultly</h1>
         </div>
-        <p className={styles.subtitle}>Start your 30-day free trial</p>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.field}>
-            <label className={styles.label}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className={styles.input}
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-          <div className={styles.field}>
-            <label className={styles.label}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className={styles.input}
-              placeholder="••••••••"
-              minLength={6}
-              required
-            />
-          </div>
-          {error && <p className={styles.error}>{error}</p>}
-          <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? 'Creating account...' : 'Create Account'}
+        <div className={styles.confirmBox}>
+          <span className={styles.confirmIcon}>📧</span>
+          <h2 className={styles.confirmTitle}>Check your email</h2>
+          <p className={styles.confirmText}>
+            We sent a confirmation link to <strong>{email}</strong>.
+            Click it to activate your account, then sign in.
+          </p>
+          <button className={styles.primaryBtn} onClick={onLoginClick} style={{ marginTop: 8 }}>
+            Go to Sign In
           </button>
-        </form>
-
-        <p className={styles.switchText}>
-          Already have an account?{' '}
-          <button className={styles.link} onClick={onLoginClick}>
-            Sign in
-          </button>
-        </p>
-
-        <p className={styles.terms}>
-          30-day free trial, then $8/month via Bitcoin
-        </p>
+        </div>
       </div>
+    )
+  }
+
+  return (
+    <div className={styles.card}>
+      <div className={styles.logoRow}>
+        <Logo size={36} />
+        <h1 className={styles.appName}>Vaultly</h1>
+      </div>
+      <p className={styles.tagline}>30-day free trial · then $8/month via Bitcoin</p>
+
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.field}>
+          <label className={styles.label}>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className={styles.input}
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label}>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className={styles.input}
+            placeholder="Min 6 characters"
+            autoComplete="new-password"
+            minLength={6}
+            required
+          />
+        </div>
+
+        {error && (
+          <div className={styles.errorBox}>
+            <span className={styles.errorIcon}>⚠</span>
+            {error}
+          </div>
+        )}
+
+        <button type="submit" className={styles.primaryBtn} disabled={loading}>
+          {loading ? (
+            <span className={styles.btnContent}>
+              <span className={styles.btnSpinner} />
+              Creating account...
+            </span>
+          ) : 'Start Free Trial'}
+        </button>
+      </form>
+
+      <div className={styles.divider}>
+        <span>Already have an account?</span>
+      </div>
+
+      <button className={styles.secondaryBtn} onClick={onLoginClick}>
+        Sign in
+      </button>
     </div>
   )
 }

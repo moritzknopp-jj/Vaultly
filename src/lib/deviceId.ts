@@ -6,7 +6,7 @@ export async function getDeviceId(): Promise<string> {
 }
 
 export async function registerDevice(userId: string): Promise<{ success: boolean; error?: string }> {
-  const { supabase } = await import('./supabase')
+  const { supabase } = await import('./supabase') // static imports cause circular issues here, dynamic is intentional
   const deviceId = await getDeviceId()
 
   const { data, error } = await supabase

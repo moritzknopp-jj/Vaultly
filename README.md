@@ -1,96 +1,109 @@
-# Vaultly 🔐
+<p align="center">
+  <img src="src/assets/logo.svg" width="80" height="80" alt="Vaultly Logo" />
+</p>
 
-A privacy-first desktop app to chat with your Obsidian vault using local AI (Ollama).
+<h1 align="center">Vaultly</h1>
+
+<p align="center">
+  <strong>Chat with your Obsidian vault using local AI. Private, offline, fast.</strong>
+</p>
+
+<p align="center">
+  <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" />
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-gold?style=flat-square&color=d4af37" />
+</p>
+
+---
+
+## What is Vaultly?
+
+Vaultly is a desktop app that connects your [Obsidian](https://obsidian.md) vault to a local AI assistant. Ask questions about your notes, get context-aware answers — all without sending your data to the cloud.
 
 ## Features
 
-- 🤖 Local AI via Ollama (llama3 + nomic-embed-text) — your notes never leave your machine
-- 🔐 Supabase authentication with 30-day free trial
-- ₿ Bitcoin payment via Blockonomics ($8/month)
-- 📁 Recursive Obsidian vault indexing with vector search
-- 🖥️ Frameless Electron desktop app (Windows, macOS, Linux)
+- 🔒 **Fully local** — AI runs on your machine via Ollama, nothing leaves your device
+- 🧠 **Semantic search** — Embeds your notes and finds the most relevant context
+- 💬 **Streaming chat** — Real-time response streaming with llama3
+- 📦 **Obsidian-native** — Reads all your `.md` files recursively
+- ₿ **Bitcoin payments** — $8/month subscription paid via Bitcoin (Blockonomics)
+- 🔑 **2-device limit** — Secure per-device authentication
+- 🆓 **30-day free trial** — No credit card needed
 
-## Prerequisites
+## How to Install
 
-1. **Node.js** 18+ and npm
-2. **Ollama** — install from [ollama.ai](https://ollama.ai), then pull models:
-   ```bash
-   ollama pull llama3
-   ollama pull nomic-embed-text
-   ```
-3. **Supabase** project with the schema from `supabase/schema.sql`
+1. Download the latest installer from [Releases](../../releases/latest)
+2. Run `Vaultly-Setup-1.0.0.exe`
+3. Launch Vaultly and create an account
 
-## Setup
+## Setting Up Ollama
+
+Vaultly requires [Ollama](https://ollama.ai) for local AI.
+
+1. Download and install Ollama from [ollama.ai](https://ollama.ai)
+2. Open a terminal and run:
 
 ```bash
-# Clone and install
-git clone https://github.com/moritzknopp-jj/Vaultly
-cd Vaultly
+ollama pull llama3
+ollama pull nomic-embed-text
+```
+
+3. Make sure Ollama is running (it starts automatically after install)
+
+## How It Works
+
+1. **Sign up** — 30-day free trial, no card needed
+2. **Select vault** — Open Settings → Select your Obsidian vault folder
+3. **Wait for indexing** — Vaultly embeds all your notes (takes 1–5 min)
+4. **Chat** — Ask anything about your notes
+
+## Screenshot
+
+> _Screenshot coming soon_
+
+## Subscription
+
+After the 30-day trial, Vaultly costs **$8/month** paid in Bitcoin.
+
+- A unique Bitcoin address is generated for your account
+- Send the exact BTC amount shown in the app
+- Payment is verified automatically, access unlocks instantly
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| Desktop app | Electron 28 + React 18 + TypeScript |
+| UI build | Vite 5 |
+| Auth + DB | Supabase |
+| Local AI | Ollama (llama3) |
+| Embeddings | nomic-embed-text via Ollama |
+| Vector search | In-memory cosine similarity |
+| Payments | Blockonomics Bitcoin API |
+
+## Building from Source
+
+```bash
+# Install dependencies
 npm install
 
-# Copy env file and fill in your values
-cp .env.example .env
-# Edit .env with your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-
-# Run in dev mode
+# Development
 npm run dev
+
+# Build (requires Electron environment)
+npm run build:win    # Windows installer
+npm run build:linux  # Linux AppImage
 ```
 
 ## Environment Variables
 
-Create a `.env` file (see `.env.example`):
+Create a `.env` file in the project root:
 
 ```
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-> **Security**: The `BLOCKONOMICS_API_KEY` is only used server-side in Supabase Edge Functions via `Deno.env.get('BLOCKONOMICS_API_KEY')` — it is never exposed to the frontend.
+## License
 
-## Supabase Edge Functions
-
-Set these secrets in your Supabase project:
-```bash
-supabase secrets set BLOCKONOMICS_API_KEY=your-key
-```
-
-Deploy edge functions:
-```bash
-supabase functions deploy generate-btc-address
-supabase functions deploy verify-payment
-supabase functions deploy check-subscription
-```
-
-## Database
-
-Run `supabase/schema.sql` in your Supabase SQL editor to create the required tables.
-
-## Build
-
-```bash
-npm run build
-```
-
-Packaged app will be in the `release/` directory.
-
-## Architecture
-
-```
-src/
-├── components/
-│   ├── Auth/          # Login & Register screens
-│   ├── Chat/          # Main chat UI + message bubbles
-│   ├── Paywall/       # Bitcoin payment screen
-│   └── Settings/      # Vault picker overlay
-├── lib/
-│   ├── supabase.ts    # Supabase client
-│   ├── ollama.ts      # Ollama API (embed + stream chat)
-│   ├── vectorSearch.ts # In-memory vector store
-│   └── deviceId.ts    # Device fingerprinting
-electron/
-├── main.ts            # Electron main process
-└── preload.ts         # Context bridge API
-supabase/
-├── functions/         # Edge functions (BTC payment, subscription)
-└── schema.sql         # Database schema
-```
+MIT © 2024 Vaultly

@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import electron from 'vite-plugin-electron'
 import renderer from 'vite-plugin-electron-renderer'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     electron([
@@ -11,8 +11,11 @@ export default defineConfig({
         entry: 'electron/main.ts',
         vite: {
           build: {
+            sourcemap: command === 'serve',
             outDir: 'dist-electron',
-            sourcemap: true,
+            rollupOptions: {
+              external: ['electron'],
+            },
           },
         },
       },
@@ -23,12 +26,19 @@ export default defineConfig({
         },
         vite: {
           build: {
+            sourcemap: command === 'serve',
             outDir: 'dist-electron',
-            sourcemap: true,
+            rollupOptions: {
+              external: ['electron'],
+            },
           },
         },
       },
     ]),
     renderer(),
   ],
-})
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  },
+}))

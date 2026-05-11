@@ -4,24 +4,24 @@
   "private": true,
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "concurrently \"vite\" \"electron .\"",
-    "build": "tsc && vite build && electron-builder",
-    "preview": "vite preview",
-    "electron:dev": "electron ."
+    "dev": "vite",
+    "build": "vite build",
+    "build:win": "vite build && electron-builder --win --x64",
+    "build:linux": "vite build && electron-builder --linux",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "vectordb": "^0.4.20",
+    "electron-updater": "^6.1.7",
     "qrcode.react": "^3.1.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "uuid": "^9.0.0"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "@types/uuid": "^9.0.0",
     "@vitejs/plugin-react": "^4.2.1",
     "concurrently": "^8.2.2",
     "electron": "^28.1.0",
@@ -34,11 +34,34 @@
   "build": {
     "appId": "com.vaultly.app",
     "productName": "Vaultly",
+    "copyright": "Copyright © 2024 Vaultly",
     "directories": {
-      "output": "release"
+      "output": "dist-release"
     },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "icon": "src/assets/logo.png",
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "src/assets/logo.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "src/assets/logo.png",
+      "category": "Utility"
     },
     "publish": {
       "provider": "github",

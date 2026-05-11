@@ -1,169 +1,255 @@
 .container {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
   background: var(--bg-primary);
-  -webkit-app-region: drag;
+  padding: 24px;
+  overflow-y: auto;
 }
 
 .card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 40px;
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-xl);
+  padding: 36px 32px 28px;
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
+  box-shadow: var(--shadow-lg);
   text-align: center;
-  -webkit-app-region: no-drag;
+  animation: cardIn 0.25s ease;
 }
 
-.header {
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.logoRow {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.icon {
-  font-size: 24px;
-}
-
-.title {
+.appName {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--accent);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
+
+/* Heading */
+.headingBlock { margin-bottom: 24px; }
 
 .heading {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 8px;
 }
 
-.subtitle {
+.subheading {
   font-size: 14px;
   color: var(--text-secondary);
-  margin-bottom: 28px;
+  line-height: 1.6;
 }
 
 .price {
   color: var(--accent);
+  font-weight: 600;
 }
 
-.qrSection {
+/* Payment block */
+.paymentBlock {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
 }
 
-.qrWrapper {
-  padding: 16px;
-  background: #141414;
-  border: 1px solid var(--border-accent);
-  border-radius: 12px;
+.qrContainer {
+  background: #111111;
+  border: 1.5px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  display: inline-block;
 }
 
-.addressBox {
-  width: 100%;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
+.amountRow {
+  text-align: center;
 }
 
-.addressLabel {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  margin-bottom: 4px;
+.amountBig {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
 }
 
-.address {
-  font-size: 12px;
+.amountBtc {
+  font-size: 28px;
+  font-weight: 800;
   color: var(--accent);
-  word-break: break-all;
-  font-family: monospace;
+  letter-spacing: -0.03em;
 }
 
-.amountBox {
-  background: var(--accent-subtle);
-  border: 1px solid var(--border-accent);
-  border-radius: 8px;
-  padding: 12px 20px;
-}
-
-.amountLabel {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-}
-
-.amount {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--accent);
-  margin: 4px 0 2px;
+.amountUnit {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-dim);
 }
 
 .amountUsd {
   font-size: 12px;
   color: var(--text-muted);
+  margin-top: 3px;
 }
 
-.polling {
+.addressBlock {
+  width: 100%;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.addressHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.addressLabel {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.copyBtn {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--accent-faint);
+  border: 1px solid var(--border-accent);
+  transition: background var(--transition);
+}
+
+.copyBtn:hover { background: var(--accent-subtle); }
+
+.addressText {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-primary);
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.pulsingDot {
+  width: 9px;
+  height: 9px;
+  background: var(--accent);
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  50% { opacity: 0.6; transform: scale(0.9); box-shadow: 0 0 0 5px rgba(212, 175, 55, 0); }
+}
+
+.statusText {
   font-size: 13px;
   color: var(--text-secondary);
 }
 
-.dot {
-  width: 8px;
-  height: 8px;
-  background: var(--accent);
-  border-radius: 50%;
-  animation: pulse 1.5s ease-in-out infinite;
+.pollHint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: -6px;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.8); }
-}
-
-.loading {
-  color: var(--text-secondary);
-  font-size: 14px;
-  margin: 20px 0;
-}
-
-.success {
+/* Generating */
+.generating {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  margin: 20px 0;
-}
-
-.successIcon {
-  font-size: 40px;
-}
-
-.signOut {
-  margin-top: 24px;
-  background: none;
-  color: var(--text-muted);
+  padding: 20px;
+  color: var(--text-secondary);
   font-size: 13px;
-  text-decoration: underline;
 }
 
-.signOut:hover {
+.generatingSpinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-mid);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Success */
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+}
+
+.successIconWrap { font-size: 52px; animation: bounceIn 0.4s ease; }
+
+@keyframes bounceIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.successTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.successSubtitle {
+  font-size: 13px;
   color: var(--text-secondary);
 }
+
+.successSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-mid);
+  border-top-color: #4ade80;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Sign out link */
+.signOutLink {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  transition: color var(--transition);
+}
+
+.signOutLink:hover { color: var(--text-secondary); }
