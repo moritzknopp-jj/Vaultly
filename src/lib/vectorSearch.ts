@@ -10,7 +10,14 @@ interface Chunk {
   source: string
 }
 
-function chunkText(text: string, chunkSize = 500, overlap = 50): string[] {
+/** Characters per chunk when splitting vault notes for embedding. */
+const CHUNK_SIZE = 500
+/** Character overlap between consecutive chunks to preserve context. */
+const CHUNK_OVERLAP = 50
+/** Number of top similar chunks to return per query. */
+const TOP_K = 5
+
+function chunkText(text: string, chunkSize = CHUNK_SIZE, overlap = CHUNK_OVERLAP): string[] {
   const chunks: string[] = []
   let start = 0
   while (start < text.length) {
@@ -71,7 +78,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB))
 }
 
-export async function searchVault(query: string, topK = 5): Promise<string> {
+export async function searchVault(query: string, topK = TOP_K): Promise<string> {
   if (vectorStore.length === 0) return ''
 
   const queryEmbedding = await embedText(query)

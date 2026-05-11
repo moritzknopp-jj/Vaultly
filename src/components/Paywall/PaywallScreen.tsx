@@ -4,7 +4,9 @@ import { supabase } from '../../lib/supabase'
 import Logo from '../Logo'
 import styles from './Paywall.module.css'
 
-const FALLBACK_BTC_AMOUNT = '0.000120'
+const FALLBACK_BTC_AMOUNT = '0.000120' // ~$8 at ~$66k BTC, used if the price API is unavailable
+/** Delay (ms) between showing payment confirmed and unlocking the app, to let the animation complete. */
+const PAYMENT_CONFIRMATION_DELAY_MS = 2500
 
 interface Props {
   userId: string
@@ -50,7 +52,7 @@ export default function PaywallScreen({ userId, btcAddress, onPaymentConfirmed, 
     const { data } = await supabase.functions.invoke('verify-payment', { body: { user_id: userId } })
     if (data?.confirmed) {
       setStatus('confirmed')
-      setTimeout(onPaymentConfirmed, 2500)
+      setTimeout(onPaymentConfirmed, PAYMENT_CONFIRMATION_DELAY_MS)
     }
   }, [userId, onPaymentConfirmed])
 

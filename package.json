@@ -1,12 +1,15 @@
 {
   "name": "vaultly",
   "version": "1.0.0",
+  "description": "Chat with your Obsidian vault using local AI",
+  "author": "Vaultly",
   "private": true,
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:win": "vite build && electron-builder --win --x64",
+    "build:win-portable": "vite build && electron-builder --win portable --x64",
     "build:linux": "vite build && electron-builder --linux",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
@@ -47,6 +50,10 @@
       "target": [
         {
           "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
           "arch": ["x64"]
         }
       ],

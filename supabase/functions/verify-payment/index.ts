@@ -6,6 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/** Monthly subscription price in USD. */
+const MONTHLY_SUBSCRIPTION_USD = 8
+/** Subscription period in days granted after payment. */
+const SUBSCRIPTION_DAYS = 30
+/**
+ * Underpayment tolerance factor (0.95 = 5%).
+ * Accounts for BTC network fees and minor exchange rate fluctuations
+ * between when the amount was displayed and when payment arrived.
+ */
+const PAYMENT_TOLERANCE = 0.95
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -74,14 +85,14 @@ serve(async (req) => {
     const priceData = await priceRes.json()
     const btcPriceUSD = priceData.price as number
 
-    const amountExpectedUSD = payment?.amount_expected ?? 8
-    const expectedSatoshis = Math.floor((amountExpectedUSD / btcPriceUSD) * 1e8 * 0.95) // allow 5% underpayment tolerance
+    const amountExpectedUSD = payment?.amount_expected ?? MONTHLY_SUBSCRIPTION_USD
+    const expectedSatoshis = Math.floor((amountExpectedUSD / btcPriceUSD) * 1e8 * PAYMENT_TOLERANCE)
 
     const confirmed = satoshis >= expectedSatoshis
 
     if (confirmed) {
       const paidUntil = new Date()
-      paidUntil.setDate(paidUntil.getDate() + 30)
+      paidUntil.setDate(paidUntil.getDate() + SUBSCRIPTION_DAYS)
 
       await supabase
         .from('users_meta')

@@ -8,6 +8,9 @@ import PaywallScreen from './components/Paywall/PaywallScreen'
 import TitleBar from './components/TitleBar'
 import Logo from './components/Logo'
 import type { Session } from '@supabase/supabase-js'
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24
+const TRIAL_DAYS = 30
 import styles from './App.module.css'
 
 type AppView = 'login' | 'register' | 'chat' | 'paywall'
@@ -79,8 +82,8 @@ export default function App() {
 
       const now = new Date()
       const trialEnd = new Date(data.trial_start)
-      trialEnd.setDate(trialEnd.getDate() + 30)
-      const daysLeft = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      trialEnd.setDate(trialEnd.getDate() + TRIAL_DAYS)
+      const daysLeft = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / MS_PER_DAY))
       setTrialDaysLeft(daysLeft)
 
       if (data.is_paid && data.paid_until && new Date(data.paid_until) > now) {

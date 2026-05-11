@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/** Monthly subscription price in USD, stored on each payment record. */
+const MONTHLY_SUBSCRIPTION_USD = 8
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -62,11 +65,11 @@ serve(async (req) => {
       .update({ btc_address: btcAddress })
       .eq('id', user_id)
 
-    // Create pending payment record
+    // Create pending payment record with current monthly price
     await supabase.from('payments').insert({
       user_id,
       btc_address: btcAddress,
-      amount_expected: 8,
+      amount_expected: MONTHLY_SUBSCRIPTION_USD,
       status: 'pending',
     })
 

@@ -26,6 +26,8 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
+    // frameless window — custom TitleBar component (src/components/TitleBar.tsx) provides
+    // minimize/maximize/close controls via IPC (window-minimize/maximize/close)
     frame: false,
     backgroundColor: '#0a0a0a',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,

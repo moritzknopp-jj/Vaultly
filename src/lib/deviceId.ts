@@ -1,12 +1,17 @@
+/** Maximum number of devices allowed per account. */
+const MAX_DEVICES_PER_ACCOUNT = 2
+
 export async function getDeviceId(): Promise<string> {
   if (window.electronAPI) {
     return window.electronAPI.getDeviceId()
   }
-  return 'dev-device-' + Math.random().toString(36).slice(2)
+  // Browser/dev fallback: use crypto.randomUUID() for a stable per-session ID
+  // (In production this path is never hit — Electron always provides getDeviceId)
+  return 'dev-' + crypto.randomUUID()
 }
 
 export async function registerDevice(userId: string): Promise<{ success: boolean; error?: string }> {
-  const { supabase } = await import('./supabase') // static imports cause circular issues here, dynamic is intentional
+  const { supabase } = await import('./supabase') // dynamic import avoids circular dep with supabase.ts
   const deviceId = await getDeviceId()
 
   const { data, error } = await supabase
@@ -23,7 +28,7 @@ export async function registerDevice(userId: string): Promise<{ success: boolean
     return { success: true }
   }
 
-  if (deviceIds.length >= 2) {
+  if (deviceIds.length >= MAX_DEVICES_PER_ACCOUNT) {
     return { success: false, error: 'Max devices reached. Remove a device in settings.' }
   }
 
