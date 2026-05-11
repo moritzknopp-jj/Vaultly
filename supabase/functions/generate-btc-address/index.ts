@@ -40,6 +40,7 @@ serve(async (req) => {
 
     // Generate new BTC address via Blockonomics
     const apiKey = Deno.env.get('BLOCKONOMICS_API_KEY')
+    if (!apiKey) throw new Error('BLOCKONOMICS_API_KEY not configured')
     const btcRes = await fetch('https://www.blockonomics.co/api/new_address', {
       method: 'POST',
       headers: {
@@ -73,7 +74,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
+    const message = err instanceof Error ? err.message : 'Internal server error'
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

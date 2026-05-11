@@ -45,6 +45,7 @@ serve(async (req) => {
 
     // Check Blockonomics for received balance
     const apiKey = Deno.env.get('BLOCKONOMICS_API_KEY')
+    if (!apiKey) throw new Error('BLOCKONOMICS_API_KEY not configured')
     const balRes = await fetch(
       `https://www.blockonomics.co/api/balance?addr=${meta.btc_address}`,
       { headers: { 'Authorization': `Bearer ${apiKey}` } }
@@ -74,7 +75,7 @@ serve(async (req) => {
     const btcPriceUSD = priceData.price as number
 
     const amountExpectedUSD = payment?.amount_expected ?? 8
-    const expectedSatoshis = Math.floor((amountExpectedUSD / btcPriceUSD) * 1e8 * 0.95) // 5% tolerance
+    const expectedSatoshis = Math.floor((amountExpectedUSD / btcPriceUSD) * 1e8 * 0.95) // allow 5% underpayment tolerance
 
     const confirmed = satoshis >= expectedSatoshis
 
@@ -98,7 +99,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
+    const message = err instanceof Error ? err.message : 'Internal server error'
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
